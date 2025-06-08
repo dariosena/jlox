@@ -1,4 +1,4 @@
-package dev.backendsouls;
+package dev.backendsouls.lox;
 
 import java.io.BufferedReader;
 import java.io.IOException;

@@ -23,7 +23,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>dev.backendsouls.Lox</mainClass>
+                            <mainClass>dev.backendsouls.lox.Lox</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

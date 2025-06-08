@@ -1,4 +1,4 @@
-package dev.backendsouls;
+package dev.backendsouls.lox;
 
 import java.util.ArrayList;
 import java.util.HashMap;

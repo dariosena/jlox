@@ -1,4 +1,4 @@
-package dev.backendsouls;
+package dev.backendsouls.lox;
 
 public class Token {
     final TokenType tokenType;
