@@ -1,4 +1,4 @@
-package dev.backendsouls.lox;
+package dev.backendsouls.lox.tool;
 
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -23,8 +23,8 @@ public class GenerateAst {
     }
 
     private static void defineAst(final String outputDir, final String baseName, List<String> types) throws IOException {
-        String path = outputDir + "/" + baseName + ".java";
-        PrintWriter writer = new PrintWriter(path, StandardCharsets.UTF_8);
+        var path = outputDir + "/" + baseName + ".java";
+        var writer = new PrintWriter(path, StandardCharsets.UTF_8);
 
         writer.println("package dev.backendsouls.lox;");
         writer.println();
@@ -32,12 +32,17 @@ public class GenerateAst {
         writer.println();
         writer.println("public interface " + baseName + " {");
 
+        defineVisitor(writer, baseName, types);
+
         // The AST classes.
-        for (String type : types) {
-            String recordName = type.split(":")[0].trim();
-            String fields = type.split(":")[1].trim();
+        for (var type : types) {
+            var recordName = type.split(":")[0].trim();
+            var fields = type.split(":")[1].trim();
             defineType(writer, baseName, recordName, fields);
         }
+
+        writer.println();
+        writer.println("    <R> R accept(Visitor<R> visitor);");
 
         writer.println("}");
         writer.close();
@@ -50,6 +55,31 @@ public class GenerateAst {
         var record = "    record " + recordName + "(" + fieldList + ")" + " implements " + baseName + " {";
 
         writer.println(record);
+
+        writer.println();
+        writer.println("        @Override");
+        writer.println("        public <R> R accept(Visitor<R> visitor) {");
+        writer.println("            return visitor.visit" + recordName + baseName + "(this);");
+        writer.println("        }");
+
+        writer.println("    }");
+        writer.println();
+    }
+
+    private static void defineVisitor(
+            final PrintWriter writer, final String baseName, List<String> types
+    ) {
+        writer.println("    interface Visitor<R> {");
+
+        for (var type : types) {
+            var typeName = type.split(":")[0].trim();
+            writer.println(
+                    "        R visit" + typeName + baseName + "("
+                            + typeName + " " + baseName.toLowerCase() + ");"
+            );
+            writer.println();
+        }
+
         writer.println("    }");
         writer.println();
     }
