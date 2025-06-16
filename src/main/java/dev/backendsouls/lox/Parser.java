@@ -6,8 +6,16 @@ public class Parser {
     private final List<Token> tokens;
     private int current = 0;
 
-    Parser(final List<Token> tokens) {
+    public Parser(final List<Token> tokens) {
         this.tokens = tokens;
+    }
+
+    public Expr parse() {
+        try {
+            return this.expression();
+        } catch (ParseError error) {
+            return null;
+        }
     }
 
     private Expr expression() {
@@ -18,7 +26,8 @@ public class Parser {
         var expr = this.comparison();
 
         while (this.match(TokenType.BANG_EQUAL, TokenType.EQUAL_EQUAL)) {
-            expr = this.getNextBinaryOperation(expr, this.comparison());
+            var operator = this.previous();
+            expr = this.getNextBinaryOperation(expr, operator, this.comparison());
         }
 
         return expr;
@@ -33,7 +42,8 @@ public class Parser {
                 TokenType.LESS,
                 TokenType.LESS_EQUAL
         )) {
-            expr = this.getNextBinaryOperation(expr, this.term());
+            var operator = this.previous();
+            expr = this.getNextBinaryOperation(expr, operator, this.term());
         }
 
         return expr;
@@ -43,7 +53,8 @@ public class Parser {
         var expr = this.factor();
 
         while (this.match(TokenType.MINUS, TokenType.PLUS)) {
-            expr = this.getNextBinaryOperation(expr, this.factor());
+            var operator = this.previous();
+            expr = this.getNextBinaryOperation(expr, operator, this.factor());
         }
 
         return expr;
@@ -53,7 +64,8 @@ public class Parser {
         var expr = this.unary();
 
         while (this.match(TokenType.SLASH, TokenType.STAR)) {
-            expr = this.getNextBinaryOperation(expr, this.unary());
+            var operator = this.previous();
+            expr = this.getNextBinaryOperation(expr, operator, this.unary());
         }
 
         return expr;
@@ -61,10 +73,15 @@ public class Parser {
 
     private Expr unary() {
         if (this.match(TokenType.BANG, TokenType.MINUS)) {
-            return new Expr.Unary(this.previous(), this.unary());
+            var operator = this.previous();
+            return new Expr.Unary(operator, this.unary());
         }
 
         return this.primary();
+    }
+
+    private Expr getNextBinaryOperation(Expr leftExpr, Token operator, Expr rightExpr) {
+        return new Expr.Binary(leftExpr, operator, rightExpr);
     }
 
     private Expr primary() {
@@ -84,10 +101,37 @@ public class Parser {
             return new Expr.Literal(this.previous().literal());
         }
 
-        // if (match(LEFT_PAREN)) { .. }
-        var expr = this.expression();
-        this.consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.");
-        return new Expr.Grouping(expr);
+        if (this.match(TokenType.LEFT_PAREN)) {
+            var expr = this.expression();
+            this.consume(TokenType.RIGHT_PAREN, "Expect ')' after expression.");
+            return new Expr.Grouping(expr);
+        }
+
+        throw this.error(this.peek(), "Expect expression.");
+    }
+
+    private void synchronize() {
+        this.advance();
+
+        while (!this.isAtEnd()) {
+            if (this.previous().tokenType() == TokenType.SEMICOLON) {
+                return;
+            }
+
+            switch (this.peek().tokenType()) {
+                case TokenType.CLASS:
+                case TokenType.FUN:
+                case TokenType.VAR:
+                case TokenType.FOR:
+                case TokenType.IF:
+                case TokenType.WHILE:
+                case TokenType.PRINT:
+                case TokenType.RETURN:
+                    return;
+            }
+        }
+
+        this.advance();
     }
 
     /**
@@ -102,13 +146,9 @@ public class Parser {
         throw this.error(this.peek(), message);
     }
 
-    private ParserError error(Token token, String message) {
+    private ParseError error(Token token, String message) {
         Lox.error(token, message);
-        return new ParserError();
-    }
-
-    private Expr getNextBinaryOperation(Expr leftExpr, Expr rightExpr) {
-        return new Expr.Binary(leftExpr, this.previous(), rightExpr);
+        return new ParseError();
     }
 
     private boolean match(TokenType... tokenTypes) {
@@ -150,6 +190,6 @@ public class Parser {
         return this.previous();
     }
 
-    private static class ParserError extends RuntimeException {
+    private static class ParseError extends RuntimeException {
     }
 }
