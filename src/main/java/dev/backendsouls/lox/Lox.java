@@ -1,7 +1,5 @@
 package dev.backendsouls.lox;
 
-import dev.backendsouls.lox.tool.AstPrinter;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -11,7 +9,11 @@ import java.nio.file.Paths;
 import java.util.List;
 
 public class Lox {
+    private static final Interpreter interpreter = new Interpreter();
+
     private static boolean hadError = false;
+
+    private static boolean hadRuntimeError = false;
 
     public static void main(String[] args) throws IOException {
         if (args.length > 1) {
@@ -48,6 +50,10 @@ public class Lox {
         if (Lox.hadError) {
             System.exit(65);
         }
+
+        if (Lox.hadRuntimeError) {
+            System.exit(70);
+        }
     }
 
     private static void run(String source) {
@@ -61,7 +67,7 @@ public class Lox {
             return;
         }
 
-        System.out.println(new AstPrinter().print(expression));
+        interpreter.interpret(expression);
     }
 
     static void error(final int line, final String message) {
@@ -77,9 +83,13 @@ public class Lox {
         report(token.line(), " at '" + token.lexeme() + "'", message);
     }
 
-    private static void report(final int line, final String where, final String message) {
-        System.err.println("[line " + line + "] Error " + where + ": " + message);
+    public static void runtimeError(RuntimeError error) {
+        Lox.hadRuntimeError = true;
+        System.err.println(error.getMessage() + "\n[line " + error.token.line() + "]");
+    }
 
+    private static void report(final int line, final String where, final String message) {
         Lox.hadError = true;
+        System.err.println("[line " + line + "] Error " + where + ": " + message);
     }
 }
