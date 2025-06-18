@@ -1,5 +1,6 @@
 package dev.backendsouls.lox;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Parser {
@@ -10,12 +11,58 @@ public class Parser {
         this.tokens = tokens;
     }
 
-    public Expr parse() {
+    public List<Stmt> parse() {
+        List<Stmt> statements = new ArrayList<>();
+        while (!this.isAtEnd()) {
+            statements.add(this.declaration());
+        }
+
+        return statements;
+    }
+
+    private Stmt declaration() {
         try {
-            return this.expression();
+            if (this.match(TokenType.VAR)) {
+                return this.varDeclaration();
+            }
+
+            return this.statement();
         } catch (ParseError error) {
+            this.synchronize();
             return null;
         }
+    }
+
+    private Stmt varDeclaration() {
+        Expr initializer = null;
+        Token name = this.consume(TokenType.IDENTIFIER, "Expect variable name.");
+
+        if (this.match(TokenType.EQUAL)) {
+            initializer = this.expression();
+        }
+
+        this.consume(TokenType.SEMICOLON, "Expect ';' after variable declaration.");
+        return new Stmt.Var(name, initializer);
+    }
+
+    private Stmt statement() {
+        if (this.match(TokenType.PRINT)) {
+            return this.printStatement();
+        }
+
+        return this.expressionStatement();
+    }
+
+    private Stmt printStatement() {
+        var value = this.expression();
+        this.consume(TokenType.SEMICOLON, "Expect ';' after value.");
+        return new Stmt.Print(value);
+    }
+
+    private Stmt expressionStatement() {
+        var expr = this.expression();
+        this.consume(TokenType.SEMICOLON, "Expect ';' after expression.");
+        return new Stmt.Expression(expr);
     }
 
     private Expr expression() {
@@ -99,6 +146,10 @@ public class Parser {
 
         if (this.match(TokenType.NUMBER, TokenType.STRING)) {
             return new Expr.Literal(this.previous().literal());
+        }
+
+        if (this.match(TokenType.IDENTIFIER)) {
+            return new Expr.Variable(this.previous());
         }
 
         if (this.match(TokenType.LEFT_PAREN)) {

@@ -1,14 +1,22 @@
 package dev.backendsouls.lox;
 
-public class Interpreter implements Expr.Visitor<Object> {
+import java.util.List;
 
-    public void interpret(Expr expression) {
+public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
+    private final Environment environment = new Environment();
+
+    public void interpret(List<Stmt> statements) {
         try {
-            Object value = this.evaluate(expression);
-            System.out.println(this.stringify(value));
+            for (var statement : statements) {
+                this.execute(statement);
+            }
         } catch (RuntimeError error) {
             Lox.runtimeError(error);
         }
+    }
+
+    private void execute(Stmt statement) {
+        statement.accept(this);
     }
 
     @Override
@@ -87,6 +95,11 @@ public class Interpreter implements Expr.Visitor<Object> {
 
     }
 
+    @Override
+    public Object visitVariableExpr(Expr.Variable expr) {
+        return this.environment.get(expr.name());
+    }
+
     private Object evaluate(Expr expr) {
         return expr.accept(this);
     }
@@ -147,5 +160,31 @@ public class Interpreter implements Expr.Visitor<Object> {
         }
 
         return object.toString();
+    }
+
+    @Override
+    public Void visitExpressionStmt(Stmt.Expression stmt) {
+        this.evaluate(stmt.expression());
+        return null;
+    }
+
+    @Override
+    public Void visitPrintStmt(Stmt.Print stmt) {
+        var value = this.evaluate(stmt.expression());
+        System.out.println(this.stringify(value));
+        return null;
+    }
+
+    @Override
+    public Void visitVarStmt(Stmt.Var stmt) {
+        Object value = null;
+
+        if (stmt.initializer() != null) {
+            value = this.evaluate(stmt.initializer());
+        }
+
+        this.environment.define(stmt.name().lexeme(), value);
+
+        return null;
     }
 }

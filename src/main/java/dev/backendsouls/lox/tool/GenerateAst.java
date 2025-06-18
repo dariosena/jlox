@@ -14,11 +14,19 @@ public class GenerateAst {
         }
 
         var outputDir = args[0];
+
         defineAst(outputDir, "Expr", Arrays.asList(
                 "Binary   : Expr left, Token operator, Expr right",
                 "Grouping : Expr expression",
                 "Literal  : Object value",
-                "Unary    : Token operator, Expr right"
+                "Unary    : Token operator, Expr right",
+                "Variable : Token name"
+        ));
+
+        defineAst(outputDir, "Stmt", Arrays.asList(
+                "Expression : Expr expression",
+                "Print      : Expr expression",
+                "Var      : Token name, Expr initializer"
         ));
     }
 
@@ -41,7 +49,6 @@ public class GenerateAst {
             defineType(writer, baseName, recordName, fields);
         }
 
-        writer.println();
         writer.println("    <R> R accept(Visitor<R> visitor);");
 
         writer.println("}");
@@ -56,7 +63,6 @@ public class GenerateAst {
 
         writer.println(record);
 
-        writer.println();
         writer.println("        @Override");
         writer.println("        public <R> R accept(Visitor<R> visitor) {");
         writer.println("            return visitor.visit" + recordName + baseName + "(this);");
@@ -77,7 +83,6 @@ public class GenerateAst {
                     "        R visit" + typeName + baseName + "("
                             + typeName + " " + baseName.toLowerCase() + ");"
             );
-            writer.println();
         }
 
         writer.println("    }");
