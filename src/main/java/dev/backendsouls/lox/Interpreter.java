@@ -88,6 +88,23 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     }
 
     @Override
+    public Object visitLogicalExpr(Expr.Logical expr) {
+        var left = this.evaluate(expr.left());
+
+        if (expr.operator().tokenType() == TokenType.OR) {
+            if (this.isTruthy(left)) {
+                return left;
+            }
+        } else {
+            if (!this.isTruthy(left)) {
+                return left;
+            }
+        }
+
+        return this.evaluate(expr.right());
+    }
+
+    @Override
     public Object visitUnaryExpr(Expr.Unary expr) {
         var right = this.evaluate(expr.right());
 
@@ -192,6 +209,17 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Void visitExpressionStmt(Stmt.Expression stmt) {
         this.evaluate(stmt.expression());
+        return null;
+    }
+
+    @Override
+    public Void visitIfStmt(Stmt.If stmt) {
+        if (this.isTruthy(this.evaluate(stmt.condition()))) {
+            this.execute(stmt.thenBranch());
+        } else if (stmt.elseBranch() != null) {
+            this.execute(stmt.elseBranch());
+        }
+
         return null;
     }
 
