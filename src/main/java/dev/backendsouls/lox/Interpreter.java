@@ -3,7 +3,7 @@ package dev.backendsouls.lox;
 import java.util.List;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
-    private final Environment environment = new Environment();
+    private Environment environment = new Environment();
 
     public void interpret(List<Stmt> statements) {
         try {
@@ -17,6 +17,13 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     private void execute(Stmt statement) {
         statement.accept(this);
+    }
+
+    @Override
+    public Object visitAssignExpr(Expr.Assign expr) {
+        var value = this.evaluate(expr.value());
+        this.environment.assign(expr.name(), value);
+        return value;
     }
 
     @Override
@@ -160,6 +167,26 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         }
 
         return object.toString();
+    }
+
+    @Override
+    public Void visitBlockStmt(Stmt.Block stmt) {
+        this.executeBlock(stmt.statements(), new Environment(this.environment));
+        return null;
+    }
+
+    private void executeBlock(List<Stmt> statements, Environment environment) {
+        Environment previousEnvironment = this.environment;
+
+        try {
+            this.environment = environment;
+
+            for (var statement : statements) {
+                this.execute(statement);
+            }
+        } finally {
+            this.environment = previousEnvironment;
+        }
     }
 
     @Override

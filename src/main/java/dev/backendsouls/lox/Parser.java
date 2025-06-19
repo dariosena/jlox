@@ -50,7 +50,23 @@ public class Parser {
             return this.printStatement();
         }
 
+        if (this.match(TokenType.LEFT_BRACE)) {
+            return new Stmt.Block(this.block());
+        }
+
         return this.expressionStatement();
+    }
+
+    private List<Stmt> block() {
+        var statements = new ArrayList<Stmt>();
+
+        while (!this.check(TokenType.RIGHT_BRACE) && !this.isAtEnd()) {
+            statements.add(this.declaration());
+        }
+
+        this.consume(TokenType.RIGHT_BRACE, "Expect '}' after block.");
+
+        return statements;
     }
 
     private Stmt printStatement() {
@@ -66,7 +82,25 @@ public class Parser {
     }
 
     private Expr expression() {
-        return this.equality();
+        return this.assignment();
+    }
+
+    private Expr assignment() {
+        var expr = this.equality();
+
+        if (this.match(TokenType.EQUAL)) {
+            var equals = this.previous();
+            var value = this.assignment();
+
+            if (expr instanceof Expr.Variable) {
+                var name = ((Expr.Variable) expr).name();
+                return new Expr.Assign(name, value);
+            }
+
+            this.error(equals, "Invalid assignment target.");
+        }
+
+        return expr;
     }
 
     private Expr equality() {
