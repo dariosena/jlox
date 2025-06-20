@@ -9,6 +9,7 @@ public interface Stmt {
         R visitIfStmt(If stmt);
         R visitPrintStmt(Print stmt);
         R visitVarStmt(Var stmt);
+        R visitWhileStmt(While stmt);
     }
 
     record Block(List<Stmt> statements) implements Stmt {
@@ -43,6 +44,13 @@ public interface Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitVarStmt(this);
+        }
+    }
+
+    record While(Expr condition, Stmt body) implements Stmt {
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitWhileStmt(this);
         }
     }
 

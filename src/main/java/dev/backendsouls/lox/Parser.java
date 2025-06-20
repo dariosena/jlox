@@ -1,6 +1,7 @@
 package dev.backendsouls.lox;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Parser {
@@ -46,11 +47,24 @@ public class Parser {
     }
 
     private Stmt statement() {
+        // For Stmt
+        if (this.match(TokenType.FOR)) {
+            return this.forStatement();
+        }
+
+        // If Stmt
         if (this.match(TokenType.IF)) {
             return this.ifStatement();
         }
+
+        // Print Stmt
         if (this.match(TokenType.PRINT)) {
             return this.printStatement();
+        }
+
+        // While Stmt
+        if (this.match(TokenType.WHILE)) {
+            return this.whileStatement();
         }
 
         // Block Stmt
@@ -59,6 +73,69 @@ public class Parser {
         }
 
         return this.expressionStatement();
+    }
+
+    private Stmt forStatement() {
+        this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'.");
+
+        // First Clause: initialization
+        Stmt initializer;
+        if (this.match(TokenType.SEMICOLON)) {
+            initializer = null;
+        } else if (this.match(TokenType.VAR)) {
+            initializer = this.varDeclaration();
+        } else {
+            initializer = this.expressionStatement();
+        }
+
+        // Last Clause: condition
+        Expr condition = null;
+        if (!this.check(TokenType.SEMICOLON)) {
+            condition = this.expression();
+        }
+        this.consume(TokenType.SEMICOLON, "Expect ';' after loop condition.");
+
+        // Third and Last Clause: increment
+        Expr increment = null;
+        if (!this.check(TokenType.RIGHT_PAREN)) {
+            increment = this.expression();
+        }
+        this.consume(TokenType.RIGHT_PAREN, "Expect ')' after for clauses..");
+
+        // Body
+        var body = this.statement();
+
+        if (increment != null) {
+            body = new Stmt.Block(Arrays.asList(
+                    body,
+                    new Stmt.Expression(increment)
+            ));
+        }
+
+        if (condition == null) {
+            condition = new Expr.Literal(true);
+        }
+
+        body = new Stmt.While(condition, body);
+
+        if (initializer != null) {
+            body = new Stmt.Block(Arrays.asList(
+                    initializer,
+                    body
+            ));
+        }
+
+        return body;
+    }
+
+    private Stmt whileStatement() {
+        this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.");
+        var condition = this.expression();
+        this.consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.");
+
+        var body = this.statement();
+
+        return new Stmt.While(condition, body);
     }
 
     private Stmt ifStatement() {
