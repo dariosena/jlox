@@ -13,7 +13,7 @@
 NUMBER      -> DIGIT+ ( "." DIGIT+ )? ;
 STRING      -> "\"" <any char except "\"">* "\"" ;
 IDENTIFIER  -> ALPHA ( ALPHA | DIGIT )* ;
-ALPHA       -> "a" ... "z" | "A" ... "Z" | "_" ; 
+ALPHA       -> "a" ... "z" | "A" ... "Z" | "_" ;
 DIGIT       -> "0" ... "9" ;
 ```
 
@@ -24,8 +24,11 @@ DIGIT       -> "0" ... "9" ;
 ```
 program     -> declaration* EOF ;
 
-declaration -> varDecl
+declaration -> funDecl
+             | varDecl
              | statement ;
+
+funDecl     -> "fun" function ;
 
 varDecl     -> "var" IDENTIFIER ( "=" expression )? ";" ;
 
@@ -67,7 +70,7 @@ term        -> factor ( ( "-" | "+" ) factor)* ;
 factor      -> unary ( ( "/" | "*" ) unary)* ;
 
 unary       -> ( "!" | "-") unary | call ;
-call        -> TBD
+call        -> primary ( "(" arguments? ")" )* ;
 primary     -> "true" | "false" | "nil"
              | NUMBER | STRING
              | "(" expression ")"
@@ -77,5 +80,7 @@ primary     -> "true" | "false" | "nil"
 ### Utility Rules
 
 ```
-TBD
+parameters     → IDENTIFIER ( "," IDENTIFIER )* ;
+arguments   -> expression ( "," expression )* ;
+function    -> IDENTIFIER "(" parameters? ")" block ;
 ```

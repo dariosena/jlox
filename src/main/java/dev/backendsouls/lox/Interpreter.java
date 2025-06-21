@@ -1,9 +1,30 @@
 package dev.backendsouls.lox;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
-    private Environment environment = new Environment();
+    private final Environment globals = new Environment();
+    private Environment environment = this.globals;
+
+    public Interpreter() {
+        this.globals.define("clock", new LoxCallable() {
+            @Override
+            public int arity() {
+                return 0;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return (double) System.currentTimeMillis() / 1000.0;
+            }
+
+            @Override
+            public String toString() {
+                return "<native fn>";
+            }
+        });
+    }
 
     public void interpret(List<Stmt> statements) {
         try {
@@ -75,6 +96,27 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
             }
             default -> null;
         };
+    }
+
+    @Override
+    public Object visitCallExpr(Expr.Call expr) {
+        var callee = this.evaluate(expr.callee());
+
+        var arguments = new ArrayList<Object>();
+        for (var argument : expr.arguments()) {
+            arguments.add(this.evaluate(argument));
+        }
+
+        if (!(callee instanceof LoxCallable function)) {
+            throw new RuntimeError(expr.paren(), "Can only call functions and classes.");
+        }
+
+        if (arguments.size() != function.arity()) {
+            var message = "Expected " + function.arity() + " arguments but got " + arguments.size() + ".";
+            throw new RuntimeError(expr.paren(), message);
+        }
+
+        return function.call(this, arguments);
     }
 
     @Override
@@ -209,6 +251,11 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
     @Override
     public Void visitExpressionStmt(Stmt.Expression stmt) {
         this.evaluate(stmt.expression());
+        return null;
+    }
+
+    @Override
+    public Void visitFunctionStmt(Stmt.Function stmt) {
         return null;
     }
 

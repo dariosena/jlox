@@ -278,7 +278,38 @@ public class Parser {
             return new Expr.Unary(operator, this.unary());
         }
 
-        return this.primary();
+        return this.call();
+    }
+
+    private Expr call() {
+        var expr = this.primary();
+
+        while (true) {
+            if (this.match(TokenType.LEFT_PAREN)) {
+                expr = this.finishCall(expr);
+            } else {
+                break;
+            }
+        }
+
+        return expr;
+    }
+
+    private Expr finishCall(Expr callee) {
+        var arguments = new ArrayList<Expr>();
+
+        if (!this.check(TokenType.RIGHT_PAREN)) {
+            do {
+                if (arguments.size() >= 255) {
+                    this.error(this.peek(), "Can't have more than 255 arguments.");
+                }
+                arguments.add(this.expression());
+            } while (this.match(TokenType.COMMA));
+        }
+
+        var paren = this.consume(TokenType.RIGHT_PAREN, "Expect ')' after arguments");
+
+        return new Expr.Call(callee, paren, arguments);
     }
 
     private Expr getNextBinaryOperation(Expr leftExpr, Token operator, Expr rightExpr) {
