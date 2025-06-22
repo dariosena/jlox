@@ -10,11 +10,11 @@
 ## Lexical Grammar
 
 ```
-NUMBER      -> DIGIT+ ( "." DIGIT+ )? ;
-STRING      -> "\"" <any char except "\"">* "\"" ;
-IDENTIFIER  -> ALPHA ( ALPHA | DIGIT )* ;
-ALPHA       -> "a" ... "z" | "A" ... "Z" | "_" ;
-DIGIT       -> "0" ... "9" ;
+NUMBER      → DIGIT+ ( "." DIGIT+ )? ;
+STRING      → "\"" <any char except "\"">* "\"" ;
+IDENTIFIER  → ALPHA ( ALPHA | DIGIT )* ;
+ALPHA       → "a" ... "z" | "A" ... "Z" | "_" ;
+DIGIT       → "0" ... "9" ;
 ```
 
 ## Syntax Grammar
@@ -22,65 +22,65 @@ DIGIT       -> "0" ... "9" ;
 ### Statements
 
 ```
-program     -> declaration* EOF ;
+program     → declaration* EOF ;
 
-declaration -> funDecl
-             | varDecl
-             | statement ;
+declaration → funDecl
+            | varDecl
+            | statement ;
 
-funDecl     -> "fun" function ;
+funDecl     → "fun" function ;
 
-varDecl     -> "var" IDENTIFIER ( "=" expression )? ";" ;
+varDecl     → "var" IDENTIFIER ( "=" expression )? ";" ;
 
-statement   -> exprStmt
-             | forStmt
-             | isStmt
-             | printStmt
-             | whileStmt
-             | block ;
+statement   → exprStmt
+            | forStmt
+            | isStmt
+            | printStmt
+            | whileStmt
+            | block ;
 
-forStmt     -> "for" "(" ( varDecl | exprStmt | ";") expression? ";" expression? ")"
+forStmt     → "for" "(" ( varDecl | exprStmt | ";") expression? ";" expression? ")"
                statement ;
 
-whileStmt   -> "while" "(" expression ")" statement ;
+whileStmt   → "while" "(" expression ")" statement ;
 
-ifStmt      -> "if" "(" expression ")" statement
-               ("else" statement)? ;
+ifStmt      → "if" "(" expression ")" statement
+              ("else" statement)? ;
 
-block       -> "{" declaration* "}" ;
+block       → "{" declaration* "}" ;
 
-exprStmt    -> expression ";" ;
+exprStmt    → expression ";" ;
 
-printStmt   -> "print" expression ";" ;
+printStmt   → "print" expression ";" ;
 ```
 
 ### Expressions
 
 ```
-expression  -> assignment ;
+expression  → assignment ;
 
-assignment  -> IDENTIFIER "=" assignment
-             | logic_or ;
+assignment  → IDENTIFIER "=" assignment
+            | logic_or ;
 
-logic_or    -> logic_and ( "or" logic_and )* ;
-logic_and   -> equality ( "and" equality )* ;
-equality    -> comparison ( ("!=" | "==") comparison )* ;
-comparison  -> term ( ( ">" | ">=" | "<" | "<=") term )* ;
-term        -> factor ( ( "-" | "+" ) factor)* ;
-factor      -> unary ( ( "/" | "*" ) unary)* ;
+logic_or    → logic_and ( "or" logic_and )* ;
+logic_and   → equality ( "and" equality )* ;
+equality    → comparison ( ("!=" | "==") comparison )* ;
+comparison  → term ( ( ">" | ">=" | "<" | "<=") term )* ;
+term        → factor ( ( "-" | "+" ) factor)* ;
+factor      → unary ( ( "/" | "*" ) unary)* ;
 
-unary       -> ( "!" | "-") unary | call ;
-call        -> primary ( "(" arguments? ")" )* ;
-primary     -> "true" | "false" | "nil"
-             | NUMBER | STRING
-             | "(" expression ")"
-             | IDENTIFIER ;
+unary       → ( "!" | "-") unary | call ;
+call        → primary ( "(" arguments? ")" )* ;
+primary     → "true" | "false" | "nil"
+            | NUMBER | STRING
+            | "(" expression ")"
+            | IDENTIFIER ;
 ```
 
 ### Utility Rules
 
 ```
-parameters     → IDENTIFIER ( "," IDENTIFIER )* ;
-arguments   -> expression ( "," expression )* ;
-function    -> IDENTIFIER "(" parameters? ")" block ;
+parameters  → IDENTIFIER ( "," IDENTIFIER )* ;
+arguments   → expression ( "," expression )* ;
+function    → IDENTIFIER "(" parameters? ")" block ;
 ```
