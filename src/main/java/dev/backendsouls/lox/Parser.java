@@ -23,6 +23,10 @@ public class Parser {
 
     private Stmt declaration() {
         try {
+            if (this.match(TokenType.FUN)) {
+                return this.function("function");
+            }
+
             if (this.match(TokenType.VAR)) {
                 return this.varDeclaration();
             }
@@ -32,6 +36,31 @@ public class Parser {
             this.synchronize();
             return null;
         }
+    }
+
+    private Stmt.Function function(String kind) {
+        var parameters = new ArrayList<Token>();
+        var name = this.consume(TokenType.IDENTIFIER, "Expect " + kind + " name.");
+
+        this.consume(TokenType.LEFT_PAREN, "Expect '(' after " + kind + " name.");
+
+        if (!this.check(TokenType.RIGHT_PAREN)) {
+            do {
+                if (parameters.size() >= 255) {
+                    this.error(this.peek(), "Can't have more than 255 parameters.");
+                }
+
+                parameters.add(
+                        this.consume(TokenType.IDENTIFIER, "Expect parameter name.")
+                );
+            } while (this.match(TokenType.COMMA));
+        }
+        this.consume(TokenType.RIGHT_PAREN, "Expect ')' after parameters.");
+
+        this.consume(TokenType.LEFT_BRACE, "Expect '{' before " + kind + " body.");
+        var body = this.block();
+
+        return new Stmt.Function(name, parameters, body);
     }
 
     private Stmt varDeclaration() {
@@ -303,6 +332,7 @@ public class Parser {
                 if (arguments.size() >= 255) {
                     this.error(this.peek(), "Can't have more than 255 arguments.");
                 }
+
                 arguments.add(this.expression());
             } while (this.match(TokenType.COMMA));
         }

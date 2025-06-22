@@ -26,6 +26,10 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         });
     }
 
+    public Environment globals() {
+        return this.globals;
+    }
+
     public void interpret(List<Stmt> statements) {
         try {
             for (var statement : statements) {
@@ -234,7 +238,7 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
         return null;
     }
 
-    private void executeBlock(List<Stmt> statements, Environment environment) {
+    public void executeBlock(List<Stmt> statements, Environment environment) {
         Environment previousEnvironment = this.environment;
 
         try {
@@ -256,6 +260,8 @@ public class Interpreter implements Expr.Visitor<Object>, Stmt.Visitor<Void> {
 
     @Override
     public Void visitFunctionStmt(Stmt.Function stmt) {
+        var function = new LoxFunction(stmt);
+        this.environment.define(stmt.name().lexeme(), function);
         return null;
     }
 
