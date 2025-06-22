@@ -16,20 +16,19 @@ public class LoxFunction implements LoxCallable {
 
     @Override
     public Object call(Interpreter interpreter, List<Object> arguments) {
-        var environment = new Environment(interpreter.globals());
-
-//        for (int i = 0; i < this.declaration.params().size(); i++) {
-//            var name = this.declaration.params().get(i).lexeme();
-//            environment.define(name, arguments.get(i));
-//        }
-
         var names = this.declaration.params().iterator();
         var values = arguments.iterator();
+        var environment = new Environment(interpreter.globals());
+
         while (names.hasNext() && values.hasNext()) {
             environment.define(names.next().lexeme(), values.next());
         }
 
-        interpreter.executeBlock(this.declaration.body(), environment);
+        try {
+            interpreter.executeBlock(this.declaration.body(), environment);
+        } catch (Return returnValue) {
+            return returnValue.value;
+        }
 
         return null;
     }

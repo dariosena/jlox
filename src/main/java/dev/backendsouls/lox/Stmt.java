@@ -9,6 +9,7 @@ public interface Stmt {
         R visitFunctionStmt(Function stmt);
         R visitIfStmt(If stmt);
         R visitPrintStmt(Print stmt);
+        R visitReturnStmt(Return stmt);
         R visitVarStmt(Var stmt);
         R visitWhileStmt(While stmt);
     }
@@ -45,6 +46,13 @@ public interface Stmt {
         @Override
         public <R> R accept(Visitor<R> visitor) {
             return visitor.visitPrintStmt(this);
+        }
+    }
+
+    record Return(Token keyword, Expr value) implements Stmt {
+        @Override
+        public <R> R accept(Visitor<R> visitor) {
+            return visitor.visitReturnStmt(this);
         }
     }
 

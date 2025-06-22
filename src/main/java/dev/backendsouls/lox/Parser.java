@@ -91,6 +91,11 @@ public class Parser {
             return this.printStatement();
         }
 
+        // Return Stmt
+        if (this.match(TokenType.RETURN)) {
+            return this.returnStatement();
+        }
+
         // While Stmt
         if (this.match(TokenType.WHILE)) {
             return this.whileStatement();
@@ -102,6 +107,19 @@ public class Parser {
         }
 
         return this.expressionStatement();
+    }
+
+    private Stmt returnStatement() {
+        var keyword = this.previous();
+        Expr value = null;
+
+        if (!this.check(TokenType.SEMICOLON)) {
+            value = this.expression();
+        }
+
+        this.consume(TokenType.SEMICOLON, "Expect ';' after return value.");
+
+        return new Stmt.Return(keyword, value);
     }
 
     private Stmt forStatement() {
@@ -170,7 +188,7 @@ public class Parser {
     private Stmt ifStatement() {
         this.consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.");
         var condition = this.expression();
-        this.consume(TokenType.LEFT_PAREN, "Expect ')' after 'if' condition.");
+        this.consume(TokenType.RIGHT_PAREN, "Expect ')' after 'if' condition.");
 
         var thenBranch = this.statement();
 
