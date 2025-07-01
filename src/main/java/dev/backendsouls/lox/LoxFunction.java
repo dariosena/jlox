@@ -5,8 +5,11 @@ import java.util.List;
 public class LoxFunction implements LoxCallable {
     private final Stmt.Function declaration;
 
-    public LoxFunction(final Stmt.Function declaration) {
+    private final Environment closure;
+
+    public LoxFunction(final Stmt.Function declaration, Environment closure) {
         this.declaration = declaration;
+        this.closure = closure;
     }
 
     @Override
@@ -18,7 +21,7 @@ public class LoxFunction implements LoxCallable {
     public Object call(Interpreter interpreter, List<Object> arguments) {
         var names = this.declaration.params().iterator();
         var values = arguments.iterator();
-        var environment = new Environment(interpreter.globals());
+        var environment = new Environment(this.closure);
 
         while (names.hasNext() && values.hasNext()) {
             environment.define(names.next().lexeme(), values.next());
